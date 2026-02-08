@@ -69,24 +69,30 @@
     </footer>
 
     <script>
-        async function fetchPinnedRepos() {
+        async function fetchOrgRepos() {
             const orgName = 'conas-labs';
             const container = document.getElementById('conas-labs-container');
             
             try {
-                // Nutzt den egoist-Service, um angepinnte Repos abzugreifen
-                const response = await fetch(`https://gh-pinned-repos.egoist.dev/?username=${orgName}`);
+                // Wir nutzen die offizielle GitHub API für Organisationen
+                // 'type=public' listet alle öffentlichen Repos auf
+                // 'sort=updated' zeigt die neuesten zuerst
+                const response = await fetch(`https://api.github.com/orgs/${orgName}/repos?type=public&sort=updated`);
                 const repos = await response.json();
-
-                if (repos.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500">Keine angepinnten Projekte gefunden.</p>';
+    
+                if (!repos || repos.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Keine öffentlichen Projekte in dieser Organisation gefunden.</p>';
                     return;
                 }
-
-                // Generiere das HTML für jedes Repo
+    
+                // Falls du NUR bestimmte Repos (wie "PinnedLoading") anzeigen willst, 
+                // kannst du hier filtern. Ansonsten zeigt er einfach alle an.
+                // Beispiel für Filter (optional): 
+                // const filteredRepos = repos.filter(r => r.name === "PinnedLoading");
+    
                 container.innerHTML = repos.map(repo => `
-                    <a href="${repo.link}" target="_blank" class="card p-5 rounded-lg block">
-                        <h3 class="text-lg font-bold text-white">${repo.repo}</h3>
+                    <a href="${repo.html_url}" target="_blank" class="card p-5 rounded-lg block">
+                        <h3 class="text-lg font-bold text-white">${repo.name}</h3>
                         <p class="text-sm text-gray-400 mt-2">
                             ${repo.description || 'Keine Beschreibung vorhanden.'}
                         </p>
@@ -97,20 +103,19 @@
                                 </span>
                             ` : ''}
                             <span class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded">
-                                ⭐ ${repo.stars}
+                                ⭐ ${repo.stargazers_count}
                             </span>
                         </div>
                     </a>
                 `).join('');
-
+    
             } catch (error) {
                 console.error('Fehler beim Laden der GitHub Repos:', error);
                 container.innerHTML = '<p class="text-red-400">Projekte konnten nicht geladen werden.</p>';
             }
         }
-
-        // Funktion beim Laden der Seite ausführen
-        fetchPinnedRepos();
+    
+        fetchOrgRepos();
     </script>
 
 </body>
